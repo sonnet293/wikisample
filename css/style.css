@@ -37,7 +37,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   color: #fff;
   background-image: linear-gradient(90deg, var(--brand-a), var(--brand-a), var(--brand-b));
 }
-.top-nav { display: flex; align-items: center; gap: 12px; height: 56px; margin: 0 20px; padding: 8px 16px; }
+/* 원본 본문 폭(1032px)에 맞춰 상단 바 내용과 본문을 가운데 정렬 */
+.top-nav { display: flex; align-items: center; gap: 12px; max-width: 1064px; height: 56px; margin: 0 auto; padding: 8px 16px; }
 .logo { display: flex; align-items: center; gap: 6px; margin-right: auto; color: #fff; font-size: 21px; font-weight: 800; white-space: nowrap; }
 .logo:hover { text-decoration: none; }
 .search-box { display: flex; width: 272px; height: 40px; border-radius: 4px; background: #fff; }
@@ -56,7 +57,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .nav-link:hover { background: rgba(255, 255, 255, 0.1); text-decoration: none; }
 
 /* ---------------- 본문 카드 ---------------- */
-.container { margin: 0 20px 40px; padding: 0 16px; }
+.container { max-width: 1064px; margin: 0 auto 40px; padding: 0 16px; }
 .wiki-article {
   min-height: 300px;
   padding: 24px;
@@ -105,6 +106,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .wiki-content th { background: #f5f5f5; }
 
 .wiki-heading {
+  clear: both;
   margin: 1.2em 0 0.8em;
   padding-bottom: 5px;
   border-bottom: 1px solid var(--border);
@@ -117,9 +119,86 @@ h3.wiki-heading { font-size: 24px; }
 h4.wiki-heading { font-size: 21px; }
 h5.wiki-heading { font-size: 18px; }
 h6.wiki-heading { font-size: 15px; }
+.wiki-heading { cursor: pointer; }
 .wiki-heading-num { cursor: pointer; }
+/* 원본과 같은 토글 아이콘: 펼침 = ∨, 접힘 = › (둘 다 #666 SVG) */
+.wiki-heading::before {
+  content: '';
+  float: left;
+  width: 0.725em;
+  height: 1.8em;
+  line-height: 1.8em;
+  margin: 0 0.5rem 0 0.2rem;
+  text-align: center;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23666' d='M256 294.1 383 167c9.4-9.4 24.6-9.4 33.9 0s9.3 24.6 0 34L273 345c-9.1 9.1-23.7 9.3-33.1.7L95 201.1c-4.7-4.7-7-10.9-7-17s2.3-12.3 7-17c9.4-9.4 24.6-9.4 33.9 0z'/%3E%3C/svg%3E");
+  background-position: center 30%;
+  background-repeat: no-repeat;
+  background-size: 0.8em 0.8em;
+}
+.wiki-heading.wiki-heading-folded { opacity: 0.5; }
+.wiki-heading.wiki-heading-folded::before {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='%23666' d='M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z'/%3E%3C/svg%3E");
+  background-position: center 34%;
+  background-size: 0.625em 0.625em;
+}
+.wiki-section-folded { display: none; }
 .flash { animation: flash 1.2s ease-out; }
 @keyframes flash { 0%, 30% { background-color: rgba(255, 230, 102, 0.6); } 100% { background-color: transparent; } }
+
+/* 인물 정보 틀 — 원본 문서의 목차 옆 표를 참고 */
+.infobox {
+  --ib-main: #1a1d23;
+  --ib-accent: #b19872;
+  float: right;
+  clear: right;
+  width: 400px;
+  max-width: 100%;
+  margin: 0 0 16px 16px;
+}
+.wiki-content .infobox table {
+  width: 100%;
+  margin: 0;
+  border: 2px solid var(--ib-main);
+  border-collapse: collapse;
+  background: #fff;
+  color: #373a3c;
+}
+.wiki-content .infobox th,
+.wiki-content .infobox td { padding: 5px 10px; border: 1px solid #ddd; vertical-align: middle; }
+.wiki-content .infobox th {
+  width: 30%;
+  background: var(--ib-main);
+  color: var(--ib-accent);
+  border-color: rgba(255, 255, 255, 0.1);
+  font-weight: 700;
+  text-align: center;
+}
+.wiki-content .infobox td { text-align: left; }
+.wiki-content .infobox .ib-title {
+  width: auto;
+  padding: 6px 10px 5px;
+  border-bottom: 4px solid var(--ib-accent);
+  line-height: 1.4;
+}
+.ib-title strong { display: block; font-size: 1.3em; }
+.ib-title span { display: block; font-weight: 400; }
+.wiki-content .infobox .ib-image { padding: 0; text-align: center; }
+.ib-image img { display: block; width: 100%; height: auto; border-radius: 0; }
+/* src 가 비어 있으면 회색 자리표시 */
+.ib-image img[src=''], .ib-image img:not([src]) {
+  height: 280px;
+  background: #e9ecef url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='%23adb5bd'%3E%3Cpath d='M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z'/%3E%3C/svg%3E") center / 48px no-repeat;
+  font-size: 0;
+}
+.infobox small { font-size: 0.8em; }
+.infobox ruby rt { font-size: 0.6em; color: #666; }
+.ib-flag { width: 24px; height: auto; margin-right: 4px; border: 1px solid #e5e5e5; vertical-align: -2px; }
+.ib-icon { width: 26px; height: 26px; margin-right: 4px; vertical-align: middle; }
+/* 펼치기: 원본과 동일하게 애니메이션 없이 즉시 열리고 닫힌다. "▼" 는 summary 글자에 포함 */
+.wiki-content details summary { cursor: pointer; font-weight: 700; list-style: none; user-select: none; }
+.wiki-content details summary::marker { content: ''; display: none; }
+.wiki-content details summary::-webkit-details-marker { display: none; }
+.wiki-content details > div { overflow: hidden; }
 
 /* 목차 */
 .wiki-toc {
@@ -208,5 +287,6 @@ h6.wiki-heading { font-size: 15px; }
   .article-head { flex-direction: column; }
   .article-head .tool-btn { align-self: flex-end; }
   .wiki-toc { display: block; min-width: 0; }
+  .infobox { float: none; width: 100%; margin: 0 0 16px; }
   #edit-text { min-height: 400px; }
 }

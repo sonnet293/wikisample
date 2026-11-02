@@ -6,8 +6,8 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 import { auth } from './firebase.js';
 
 // Supabase 대시보드 > Project Settings > API 에서 복사해 넣으세요.
-export const SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';
-export const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY';
+export const SUPABASE_URL = 'https://uysfefncmkusywuqnamz.supabase.co';
+export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5c2ZlZm5jbWt1c3l3dXFuYW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM2MDgwODUsImV4cCI6MjEwOTE4NDA4NX0.eMjanHTGIeL4W0mtz5wEoqjJOaQqlasqaV0ANeAV_Pc';
 export const BUCKET = 'wiki-images';
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024;

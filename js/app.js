@@ -5,6 +5,7 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https:/
 import { getDocument, saveDocument } from './db.js';
 import { renderMarkdown } from './markdown.js';
 import { uploadImage, isSupabaseConfigured } from './supabase.js';
+import { INFOBOX_TEMPLATE } from './templates.js';
 
 const SITE_NAME = '샘플위키';
 const FRONT_PAGE = '대문';
@@ -125,13 +126,24 @@ async function viewDocument(title) {
   });
 }
 
-// 목차 번호 ↔ 제목 이동
+// 목차 번호 ↔ 제목 이동, 제목 클릭 시 문단 접기/펼치기
 app.addEventListener('click', (e) => {
+  const heading = e.target.closest('.wiki-heading');
+  if (heading && !e.target.closest('a')) {
+    const folded = heading.classList.toggle('wiki-heading-folded');
+    heading.nextElementSibling?.classList.toggle('wiki-section-folded', folded);
+    return;
+  }
   const link = e.target.closest('[data-scroll]');
   if (!link) return;
   e.preventDefault();
   const target = document.getElementById(link.dataset.scroll);
   if (!target) return;
+  // 접힌 문단 안으로 이동하면 펼친다
+  for (let s = target.closest('.wiki-section-folded'); s; s = s.parentElement.closest('.wiki-section-folded')) {
+    s.classList.remove('wiki-section-folded');
+    s.previousElementSibling?.classList.remove('wiki-heading-folded');
+  }
   target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   target.classList.remove('flash');
   void target.offsetWidth;
@@ -165,6 +177,7 @@ async function viewEdit(title) {
             <button type="button" data-wrap="[|](https://)" title="링크"><i class="fa-solid fa-link"></i></button>
             <button type="button" data-wrap="\n[목차]\n|" title="목차 위치"><i class="fa-solid fa-list-ol"></i></button>
             <button type="button" id="img-btn" title="이미지 업로드"><i class="fa-solid fa-image"></i></button>
+            <button type="button" id="infobox-btn" title="인물 정보 틀 넣기"><i class="fa-solid fa-id-card"></i></button>
             <input type="file" id="img-file" accept="image/png,image/jpeg,image/gif,image/webp" hidden />
           </div>
           <textarea id="edit-text" spellcheck="false" placeholder="마크다운으로 작성하세요.&#10;# 제목, ## 소제목 을 쓰면 목차가 자동으로 만들어집니다.&#10;이미지는 위 버튼, 붙여넣기, 끌어다 놓기로 올릴 수 있습니다.">${esc(data?.content ?? '')}</textarea>
@@ -198,6 +211,8 @@ async function viewEdit(title) {
 
   // 이미지: 버튼 / 붙여넣기 / 끌어다 놓기
   $('#img-btn').addEventListener('click', () => $('#img-file').click());
+  // 틀은 HTML 블록이라 앞뒤로 빈 줄이 있어야 마크다운과 섞이지 않는다
+  $('#infobox-btn').addEventListener('click', () => insertAround(ta, '\n\n' + INFOBOX_TEMPLATE + '\n', ''));
   $('#img-file').addEventListener('change', (e) => {
     uploadInto(ta, e.target.files[0]);
     e.target.value = '';

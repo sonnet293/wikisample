@@ -57,5 +57,20 @@ export function renderMarkdown(md) {
 
   if (marker) marker.replaceWith(toc);
   else root.querySelector('.wiki-heading').before(toc);
+
+  // 제목마다 다음 같은/상위 단계 제목 전까지의 내용을 .wiki-section 으로 감싼다 (접기용).
+  // 뒤에서부터 처리하면 하위 문단이 먼저 감싸져서 상위 문단 안에 그대로 들어간다.
+  const els = [...root.querySelectorAll(':scope > .wiki-heading')];
+  for (let i = els.length - 1; i >= 0; i--) {
+    const h = els[i];
+    const section = document.createElement('div');
+    section.className = 'wiki-section';
+    while (h.nextSibling && !(h.nextSibling.classList?.contains('wiki-heading') && depthOf(h.nextSibling) <= depthOf(h))) {
+      section.append(h.nextSibling);
+    }
+    h.after(section);
+  }
   return root.innerHTML;
 }
+
+const depthOf = (h) => +h.tagName[1];
