@@ -75,7 +75,6 @@ async function route() {
   editDirty = false;
   currentHash = location.hash;
   const r = parseHash();
-  app.classList.add('loading');
   try {
     if (r.view === 'edit') await viewEdit(r.title);
     else if (r.view === 'login') await viewLogin(r.params);
@@ -83,8 +82,6 @@ async function route() {
   } catch (e) {
     console.error(e);
     renderPage({ title: '오류', body: `<div class="alert">${esc(errorMessage(e))}</div>` });
-  } finally {
-    app.classList.remove('loading');
   }
   window.scrollTo(0, 0);
 }
@@ -144,10 +141,7 @@ app.addEventListener('click', (e) => {
     s.classList.remove('wiki-section-folded');
     s.previousElementSibling?.classList.remove('wiki-heading-folded');
   }
-  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  target.classList.remove('flash');
-  void target.offsetWidth;
-  target.classList.add('flash');
+  target.scrollIntoView({ block: 'start' });
 });
 
 /* ---------------- 편집 ---------------- */
