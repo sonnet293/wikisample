@@ -38,23 +38,51 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background-image: linear-gradient(90deg, var(--brand-a), var(--brand-a), var(--brand-b));
 }
 /* 원본 본문 폭(1032px)에 맞춰 상단 바 내용과 본문을 가운데 정렬 */
-.top-nav { display: flex; align-items: center; gap: 12px; max-width: 1064px; height: 56px; margin: 0 auto; padding: 8px 16px; }
-.logo { display: flex; align-items: center; gap: 6px; margin-right: auto; color: #fff; font-size: 21px; font-weight: 800; white-space: nowrap; }
+.top-nav { position: relative; display: flex; align-items: center; max-width: 1064px; height: 56px; margin: 0 auto; padding: 8px 16px; }
+.logo {
+  display: flex; align-items: center; gap: 6px;
+  width: 128px; height: 40px; margin-right: 16px;
+  color: #fff; font-size: 21px; font-weight: 800; white-space: nowrap;
+}
 .logo:hover { text-decoration: none; }
+.search-area { display: flex; margin: 0 12px 0 auto; }
 .search-box { display: flex; width: 272px; height: 40px; border-radius: 4px; background: #fff; }
-.search-box input { flex: 1; min-width: 0; padding: 0 0 0 12px; border: 0; outline: 0; background: transparent; color: #212529; font: inherit; }
-.search-box button { width: 40px; border: 0; background: none; color: #212529; transition: color 0.15s; }
-.search-box button:hover { color: var(--brand-a); }
-.user-area { display: flex; align-items: center; gap: 4px; }
-.user-name { display: flex; align-items: center; gap: 8px; padding: 0 8px; font-weight: 500; white-space: nowrap; }
+.search-box input { width: 200px; min-width: 0; padding: 0 0 0 12px; border: 0; outline: 0; background: transparent; color: #212529; font: inherit; }
+.search-box input::-webkit-search-cancel-button { display: none; }
+.search-btn { width: 36px; padding: 0; border: 0; background: none; color: #212529; font-size: 15px; transition: color 0.05s ease-in; }
 .nav-link {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; justify-content: center;
   height: 40px; padding: 0 12px;
   border: 0; border-radius: 4px; background: transparent;
-  color: #fff; font-size: 16px; font-weight: 500; white-space: nowrap;
-  transition: background-color 0.15s;
+  color: #fff; font-size: 16.8px; font-weight: 500; white-space: nowrap;
+  transition: background-color 0.05s ease-in;
 }
-.nav-link:hover { background: rgba(255, 255, 255, 0.1); text-decoration: none; }
+.nav-link:hover, .nav-link[aria-expanded='true'] { background: rgba(255, 255, 255, 0.1); text-decoration: none; }
+.user-area { position: relative; }
+.user-btn { width: 40.8px; }
+.user-btn i { font-size: 19.2px; }
+
+/* 사용자 메뉴: 원본처럼 애니메이션 없이 바로 열림 */
+.user-menu {
+  position: absolute; top: calc(100% + 4px); right: -4px; z-index: 50;
+  width: 240px; padding: 4px 0;
+  background: #fff; color: var(--text);
+  border: 1px solid #ced4da; border-radius: 6px;
+  box-shadow: rgba(0, 0, 0, 0.165) 0 10px 15px -3px, rgba(0, 0, 0, 0.165) 0 4px 6px -4px;
+}
+.um-header { margin: 2px 4px; padding: 6px 12px; }
+.um-label { margin-bottom: 5.6px; font-size: 12.8px; line-height: 1; }
+.um-value { font-size: 17.6px; font-weight: 500; line-height: 1; }
+.um-divider { height: 1px; margin: 4px 0; background: #dee2e6; }
+.um-item {
+  display: flex; align-items: center; gap: 12px; width: calc(100% - 8px);
+  margin: 2px 4px; padding: 6px 12px;
+  border: 0; border-radius: 4px; background: none;
+  color: var(--text); font-size: 15px; text-align: left;
+  transition: background-color 0.05s ease-in;
+}
+.um-item:hover { background: #efefef; text-decoration: none; }
+.um-item i { width: 16px; text-align: center; }
 
 /* ---------------- 본문 카드 ---------------- */
 .container { max-width: 1064px; margin: 0 auto 40px; padding: 0 16px; }
@@ -188,24 +216,40 @@ h6.wiki-heading { font-size: 15px; }
 .infobox ruby rt { font-size: 0.6em; color: #666; }
 .ib-flag { width: 24px; height: auto; margin-right: 4px; border: 1px solid #e5e5e5; vertical-align: -2px; }
 .ib-icon { width: 26px; height: 26px; margin-right: 4px; vertical-align: middle; }
-/* 펼치기: 원본과 동일하게 애니메이션 없이 즉시 열리고 닫힌다. "▼" 는 summary 글자에 포함 */
-.wiki-content details summary { cursor: pointer; font-weight: 700; list-style: none; user-select: none; }
+/* 펼치기(스포일러): "▼" 는 summary 글자에 포함. 여닫는 높이 애니메이션은 app.js (원본과 같은 100ms) */
 .wiki-content details summary::marker { content: ''; display: none; }
 .wiki-content details summary::-webkit-details-marker { display: none; }
-.wiki-content details > div { overflow: hidden; }
+.wiki-content details:not(.toc-details) summary { cursor: pointer; font-weight: 700; list-style: none; user-select: none; }
+.wiki-content details:not(.toc-details) > div { overflow: hidden; }
 
-/* 목차 */
+/* 목차 — 원본과 같은 구조: "목차" 제목 + 오른쪽 토글 아이콘 (펼침 ∨ / 접힘 ‹) */
 .wiki-toc {
   display: inline-block;
-  min-width: 280px;
   max-width: 100%;
-  margin: 8px 0 12px;
-  padding: 14px 20px 15px 14px;
+  margin-left: 5px;
+  padding: 12px 20px 12px 0;
   border: 1px solid var(--border);
   scroll-margin-top: 12px;
 }
-.toc-title { margin-bottom: 10px; font-size: 18px; }
-.toc-item { margin-left: 6px; }
+.toc-details summary {
+  min-width: 60px;
+  margin-left: 14px;
+  font-size: 1.25em;
+  list-style: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='%23666' d='M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z'/%3E%3C/svg%3E");
+  background-position: 100% center;
+  background-repeat: no-repeat;
+  background-size: auto 14px;
+}
+.toc-details summary::before { content: '목차'; }
+.toc-details[open] { padding-bottom: 4px; }
+.toc-details[open] summary {
+  margin-bottom: 12px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%23666' d='M201.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 338.7 54.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z'/%3E%3C/svg%3E");
+}
+.toc-indent { padding-left: 20px; }
+.toc-item { display: block; }
 .toc-item a { cursor: pointer; }
 
 /* ---------------- 편집 ---------------- */
@@ -265,22 +309,31 @@ h6.wiki-heading { font-size: 15px; }
 .toast-error { background: #c82333; }
 
 /* ---------------- 반응형 ---------------- */
+/* 원본: 1024px 미만이면 초록 바가 48px 로 줄고, 검색창이 바 아래의 흰색 줄(40px)로 내려간다 */
 @media (max-width: 1023.98px) {
-  .top-bar { margin-bottom: 0; }
-  .top-nav { margin: 0; padding: 8px 12px; }
+  .top-bar { position: relative; margin-bottom: 0; padding-bottom: 40px; }
+  .top-nav { position: static; max-width: none; height: 48px; margin: 0; padding: 8px 16px; }
+  .logo { height: 32px; margin-right: 8px; }
+  .nav-link { height: 32px; }
+  .user-area { margin-left: auto; }
+  .search-area {
+    position: absolute; top: 48px; left: 0; right: 0;
+    height: 40px; margin: 0;
+    background: #fff; border-bottom: 1px solid #ccc;
+  }
+  .search-box { flex: 1; width: auto; height: 39px; border-radius: 0; }
+  .search-box input { flex: 1; width: auto; }
+  .search-btn { width: 32px; }
   .container { margin: 0; padding: 0; }
   .wiki-article { padding: 16px; border: 0; border-radius: 0; }
   .doc-title { font-size: 32px; }
 }
 @media (max-width: 767.98px) {
-  .top-nav { flex-wrap: wrap; height: auto; gap: 8px; }
-  .search-box { order: 3; width: 100%; }
-  .logo span { font-size: 18px; }
-  .nav-link span, .user-name { display: none; }
+  .top-nav { padding: 8px; }
+  .logo { width: 112px; margin: 0 8px 0 4px; font-size: 18px; }
   .wiki-article { padding: 12px; }
   .article-head { flex-direction: column; }
   .article-head .tool-btn { align-self: flex-end; }
-  .wiki-toc { display: block; min-width: 0; }
   .infobox { float: none; width: 100%; margin: 0 0 16px; }
   #edit-text { min-height: 400px; }
 }

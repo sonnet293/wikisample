@@ -123,8 +123,33 @@ async function viewDocument(title) {
   });
 }
 
+// 목차·스포일러(<details>) 여닫기: 원본과 같이 높이를 100ms 동안 애니메이션
+// (열기 ease-in, 닫기 ease-out, 닫을 때는 애니메이션이 끝난 뒤 open 을 해제)
+function toggleDetails(details) {
+  details.__anim?.cancel();
+  const summary = details.querySelector(':scope > summary');
+  const from = details.offsetHeight;
+  const opening = !details.open;
+  if (opening) details.open = true;
+  const to = opening ? details.offsetHeight : summary.offsetHeight;
+  details.style.overflow = 'hidden';
+  const anim = details.animate({ height: [from + 'px', to + 'px'] }, { duration: 100, easing: opening ? 'ease-in' : 'ease-out' });
+  details.__anim = anim;
+  anim.onfinish = () => {
+    if (!opening) details.open = false;
+    details.style.overflow = '';
+    details.__anim = null;
+  };
+}
+
 // 목차 번호 ↔ 제목 이동, 제목 클릭 시 문단 접기/펼치기
 app.addEventListener('click', (e) => {
+  const summary = e.target.closest('details > summary');
+  if (summary) {
+    e.preventDefault();
+    toggleDetails(summary.parentElement);
+    return;
+  }
   const heading = e.target.closest('.wiki-heading');
   if (heading && !e.target.closest('a')) {
     const folded = heading.classList.toggle('wiki-heading-folded');
@@ -304,22 +329,50 @@ async function viewLogin(params) {
 
 /* ---------------- 상단 바 ---------------- */
 
-function renderUserArea() {
-  const area = $('#user-area');
+// 오른쪽 위 사람 아이콘 → 메뉴 (원본처럼 애니메이션 없이 바로 열림)
+const userBtn = $('#user-btn');
+const userMenu = $('#user-menu');
+
+function setUserMenu(open) {
+  userMenu.hidden = !open;
+  userBtn.setAttribute('aria-expanded', String(open));
+}
+
+function renderUserMenu() {
   if (currentUser) {
-    area.innerHTML = `
-      <span class="user-name"><i class="fa-solid fa-user"></i>${esc(currentUser.displayName || currentUser.email.split('@')[0])}</span>
-      <button type="button" class="nav-link" id="logout-btn">로그아웃</button>`;
-    $('#logout-btn').addEventListener('click', async () => {
-      await signOut(auth);
-      toast('로그아웃했습니다.');
-      if (location.hash.startsWith('#/edit')) go('#/w/' + enc(parseHash().title));
-    });
+    userMenu.innerHTML = `
+      <div class="um-header"><div class="um-label">사용자</div><div class="um-value">${esc(currentUser.displayName || currentUser.email.split('@')[0])}</div></div>
+      <div class="um-divider"></div>
+      <button type="button" class="um-item" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i>로그아웃</button>`;
   } else {
     const back = location.hash.startsWith('#/login') ? '' : '?redirect=' + enc(location.hash || '#/w/' + enc(FRONT_PAGE));
-    area.innerHTML = `<a class="nav-link" href="#/login${back}"><i class="fa-solid fa-right-to-bracket"></i><span>로그인</span></a>`;
+    userMenu.innerHTML = `
+      <div class="um-header"><div class="um-label">상태</div><div class="um-value">로그인하지 않음</div></div>
+      <div class="um-divider"></div>
+      <a class="um-item" href="#/login${back}"><i class="fa-solid fa-right-to-bracket"></i>로그인</a>`;
   }
 }
+
+userBtn.addEventListener('click', () => {
+  if (userMenu.hidden) renderUserMenu();
+  setUserMenu(userMenu.hidden);
+});
+userMenu.addEventListener('click', async (e) => {
+  if (e.target.closest('#logout-btn')) {
+    setUserMenu(false);
+    await signOut(auth);
+    toast('로그아웃했습니다.');
+    if (location.hash.startsWith('#/edit')) go('#/w/' + enc(parseHash().title));
+  } else if (e.target.closest('.um-item')) {
+    setUserMenu(false);
+  }
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.user-area')) setUserMenu(false);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') setUserMenu(false);
+});
 
 $('#search-form').addEventListener('submit', (e) => {
   e.preventDefault();
@@ -331,9 +384,9 @@ $('#search-form').addEventListener('submit', (e) => {
 
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
-  renderUserArea();
+  renderUserMenu();
   resolveAuthReady();
 });
-window.addEventListener('hashchange', () => { route(); if (!currentUser) renderUserArea(); });
+window.addEventListener('hashchange', () => { setUserMenu(false); route(); });
 window.addEventListener('beforeunload', (e) => { if (editDirty) e.preventDefault(); });
 route();

@@ -42,17 +42,25 @@ export function renderMarkdown(md) {
     return { depth, num, id, text: h.textContent };
   });
 
+  // 원본 구조: <details open><summary/> 안에 단계마다 .toc-indent 를 중첩, 항목은 "<a>1</a>. 개요"
   const toc = document.createElement('div');
   toc.className = 'wiki-toc';
   toc.id = 'toc';
-  toc.innerHTML = '<div class="toc-title">목차</div>';
+  toc.innerHTML = '<details class="toc-details" open><summary></summary></details>';
+  const stack = [toc.firstChild];
   for (const it of items) {
-    const row = document.createElement('div');
+    while (stack.length > it.depth + 1) stack.pop();
+    while (stack.length <= it.depth) {
+      const indent = document.createElement('div');
+      indent.className = 'toc-indent';
+      stack[stack.length - 1].append(indent);
+      stack.push(indent);
+    }
+    const row = document.createElement('span');
     row.className = 'toc-item';
-    row.style.paddingLeft = (it.depth - 1) * 20 + 'px';
-    row.innerHTML = `<a data-scroll="${it.id}" role="button">${it.num}</a> `;
+    row.innerHTML = `<a data-scroll="${it.id}" role="button">${it.num.slice(0, -1)}</a>. `;
     row.append(it.text);
-    toc.append(row);
+    stack[stack.length - 1].append(row);
   }
 
   if (marker) marker.replaceWith(toc);

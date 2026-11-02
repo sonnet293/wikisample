@@ -12,11 +12,17 @@
     <header class="top-bar">
       <nav class="top-nav">
         <a class="logo" href="#/w/%EB%8C%80%EB%AC%B8"><i class="fa-solid fa-seedling"></i><span>샘플위키</span></a>
-        <form class="search-box" id="search-form" autocomplete="off">
-          <input type="search" id="search-input" placeholder="문서 제목으로 이동" aria-label="문서 제목" />
-          <button type="submit" aria-label="이동"><i class="fa-solid fa-arrow-right"></i></button>
-        </form>
-        <div class="user-area" id="user-area"></div>
+        <div class="search-area">
+          <form class="search-box" id="search-form" autocomplete="off">
+            <input type="search" id="search-input" placeholder="여기에서 검색" aria-label="문서 제목" />
+            <button type="submit" class="search-btn" title="검색" aria-label="검색"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <button type="submit" class="search-btn" title="이동" aria-label="이동"><i class="fa-solid fa-arrow-right"></i></button>
+          </form>
+        </div>
+        <div class="user-area">
+          <button type="button" class="nav-link user-btn" id="user-btn" aria-label="계정" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-user"></i></button>
+          <div class="user-menu" id="user-menu" role="menu" hidden></div>
+        </div>
       </nav>
     </header>
 
