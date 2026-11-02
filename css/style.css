@@ -167,55 +167,66 @@ h6.wiki-heading { font-size: 15px; }
 }
 .wiki-section-folded { display: none; }
 
-/* 인물 정보 틀 — 원본 문서의 목차 옆 표를 참고 */
+/* 인물 정보 틀 — 원본 문서의 목차 옆 표를 참고 (오른쪽 400px 플로팅, 모바일에서는 꽉 찬 한 줄) */
 .infobox {
-  --ib-main: #1a1d23;
-  --ib-accent: #b19872;
+  --ib-main: #30af9e;
+  --ib-dark: #222;
   float: right;
   clear: right;
   width: 400px;
   max-width: 100%;
-  margin: 0 0 16px 16px;
+  margin: 10px 0 20px 20px;
+  /* 한자·가나를 시스템 대체 글꼴 대신 Pretendard JP 로 그려서 ruby 줄 높이를 원본과 맞춘다 */
+  font-family: 'Pretendard JP Variable', var(--font);
 }
 .wiki-content .infobox table {
   width: 100%;
   margin: 0;
-  border: 2px solid var(--ib-main);
+  border: 2px solid var(--ib-dark);
   border-collapse: collapse;
   background: #fff;
-  color: #373a3c;
+  color: #000;
 }
 .wiki-content .infobox th,
-.wiki-content .infobox td { padding: 5px 10px; border: 1px solid #ddd; vertical-align: middle; }
-.wiki-content .infobox th {
-  width: 30%;
-  background: var(--ib-main);
-  color: var(--ib-accent);
-  border-color: rgba(255, 255, 255, 0.1);
+.wiki-content .infobox td { padding: 5px 10px; border: 1px solid #ddd; vertical-align: middle; text-align: left; }
+/* 항목 이름 칸: 초록 배경 + 검은 둥근 이름표 */
+.wiki-content .infobox th { width: 30%; background: var(--ib-main); font-weight: 400; text-align: center; }
+.infobox th > span {
+  display: inline-block;
+  width: 100%;
+  margin: 1px;
+  padding: 1px;
+  border-radius: 10px;
+  background: var(--ib-dark);
+  color: #fff;
   font-weight: 700;
-  text-align: center;
 }
-.wiki-content .infobox td { text-align: left; }
+/* 제목: 왼쪽 위 대각선 띠 + 검은 외곽선 흰 글자 */
 .wiki-content .infobox .ib-title {
-  width: auto;
-  padding: 6px 10px 5px;
-  border-bottom: 4px solid var(--ib-accent);
-  line-height: 1.4;
+  padding: 10px 0;
+  background: linear-gradient(135deg, var(--ib-main) 15%, transparent 15%);
+  color: #fff;
+  text-align: center;
+  text-shadow: 1px 0 #000, 0 1px #000, -1px 0 #000, 0 -1px #000, 1px 1px #000, 1px -1px #000, -1px -1px #000, -1px 1px #000;
 }
-.ib-title strong { display: block; font-size: 1.3em; }
-.ib-title span { display: block; font-weight: 400; }
+.ib-title strong, .ib-title span { display: block; }
+.ib-title strong { font-size: 1.3889em; }
+.wiki-content .infobox .ib-quote { background: var(--ib-dark); color: #fff; text-align: center; }
 .wiki-content .infobox .ib-image { padding: 0; text-align: center; }
 .ib-image img { display: block; width: 100%; height: auto; border-radius: 0; }
 /* src 가 비어 있으면 회색 자리표시 */
 .ib-image img[src=''], .ib-image img:not([src]) {
-  height: 280px;
+  aspect-ratio: 2 / 3;
   background: #e9ecef url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='%23adb5bd'%3E%3Cpath d='M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z'/%3E%3C/svg%3E") center / 48px no-repeat;
   font-size: 0;
 }
+.wiki-content .infobox .ib-flagcell { width: 10%; }
 .infobox small { font-size: 0.8em; }
-.infobox ruby rt { font-size: 0.6em; color: #666; }
-.ib-flag { width: 24px; height: auto; margin-right: 4px; border: 1px solid #e5e5e5; vertical-align: -2px; }
-.ib-icon { width: 26px; height: 26px; margin-right: 4px; vertical-align: middle; }
+.infobox .ib-plain { color: inherit; }
+.infobox .ib-flag { width: 26px; max-width: none; height: auto; border: 1px solid #ddd; border-radius: 0; vertical-align: middle; }
+/* 진영 아이콘은 그대로, 속성·특성 아이콘(-dark)은 검은 둥근 칸 안에 */
+.infobox .ib-icon { width: 25px; height: auto; border-radius: 0; vertical-align: middle; }
+.infobox .ib-icon-dark { height: 25px; margin: 1px; border-radius: 5px; background: var(--ib-dark); object-fit: contain; object-position: top; }
 /* 펼치기(스포일러): "▼" 는 summary 글자에 포함. 여닫는 높이 애니메이션은 app.js (원본과 같은 100ms) */
 .wiki-content details summary::marker { content: ''; display: none; }
 .wiki-content details summary::-webkit-details-marker { display: none; }
@@ -248,6 +259,33 @@ h6.wiki-heading { font-size: 15px; }
   margin-bottom: 12px;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%23666' d='M201.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 338.7 54.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z'/%3E%3C/svg%3E");
 }
+/* 각주 — 원본: 본문의 [1] 은 0.8em 위첨자, 문서 끝 목록은 위쪽 회색 선 아래에 한 줄씩 */
+.wiki-fn { font-size: 0.8em; line-height: 1.5; vertical-align: super; cursor: pointer; }
+.wiki-footnotes { clear: both; margin: 1.5em 0; padding: 0.5em 0; border-top: 1px solid #777; }
+.wiki-fn-item { display: block; margin-bottom: 0.5em; line-height: 1.75; }
+.wiki-fn-item > a[data-scroll] { cursor: pointer; }
+/* 마우스를 올렸을 때 뜨는 말풍선 (원본 .popper: 흰 바탕, 3px 둥근 모서리, 옅은 그림자, 아래쪽 #ddd 삼각형) */
+.fn-popper {
+  position: absolute;
+  z-index: 510;
+  max-width: 50%;
+  padding: 15px;
+  background: #fff;
+  border-radius: 3px;
+  box-shadow: rgba(0, 0, 0, 0.5) 0 0 2px;
+}
+.fn-popper > a[data-scroll] { cursor: pointer; }
+.fn-popper::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: calc(var(--arrow-x, 50%) - 5px);
+  border-style: solid;
+  border-width: 5px 5px 0;
+  border-color: #ddd transparent transparent;
+}
+.fn-popper.below::after { top: -5px; bottom: auto; border-width: 0 5px 5px; border-color: transparent transparent #ddd; }
+
 .toc-indent { padding-left: 20px; }
 .toc-item { display: block; }
 .toc-item a { cursor: pointer; }
@@ -334,6 +372,10 @@ h6.wiki-heading { font-size: 15px; }
   .wiki-article { padding: 12px; }
   .article-head { flex-direction: column; }
   .article-head .tool-btn { align-self: flex-end; }
+  /* 모바일: 상단 바는 그라데이션 없이 단색 */
+  .top-bar { background-image: none; background-color: var(--brand-a); }
+  /* 모바일: 인물 정보 틀 → 목차 순서로 한 줄에 하나씩, 둘 다 화면 폭을 꽉 채운다 */
   .infobox { float: none; width: 100%; margin: 0 0 16px; }
+  .wiki-toc { display: block; margin-left: 0; }
   #edit-text { min-height: 400px; }
 }

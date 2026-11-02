@@ -5,10 +5,68 @@ import DOMPurify from 'https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.
 
 // [TOC] 또는 [목차] 가 단독으로 있는 줄에 목차를 넣는다. 없으면 첫 제목 앞에 자동으로 넣는다.
 const TOC_MARKERS = ['[TOC]', '[목차]'];
+// 각주 (나무위키 문법): [* 내용] → [1], [*이름 내용] → [이름], 앞에서 쓴 [*이름] 은 같은 각주를 다시 가리킨다.
+// [각주] 가 단독으로 있는 줄에 각주 목록을 넣는다. 없으면 문서 끝에 넣는다.
+const FOOTNOTE_MARKERS = ['[각주]', '[footnote]'];
+
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+let notes; // renderMarkdown 한 번 동안 모은 각주
+
+marked.use({
+  extensions: [{
+    name: 'footnote',
+    level: 'inline',
+    start(src) {
+      const i = src.indexOf('[*');
+      return i < 0 ? undefined : i;
+    },
+    tokenizer(src) {
+      if (!src.startsWith('[*')) return;
+      // 내용 안의 [링크](주소) 처럼 대괄호가 겹쳐도 짝이 맞는 ] 까지를 각주로 본다
+      let depth = 0;
+      let end = -1;
+      for (let i = 0; i < src.length && end < 0; i++) {
+        if (src[i] === '\\') i++;
+        else if (src[i] === '[') depth++;
+        else if (src[i] === ']' && --depth === 0) end = i;
+      }
+      if (end < 0 || src[end + 1] === '(') return; // 닫히지 않았거나 [*기울임*](주소) 링크
+      const [, name, text] = src.slice(2, end).match(/^(\S*)\s*([\s\S]*)$/);
+      if (!text && !notes.names.has(name)) return; // 내용도 없고 앞에 정의된 이름도 아니면 그냥 글자
+      if (name) notes.names.add(name);
+      return { type: 'footnote', raw: src.slice(0, end + 1), name, tokens: this.lexer.inlineTokens(text) };
+    },
+    renderer(token) {
+      // 제목은 marked 가 글자만 뽑으려고 한 번 더 렌더링하므로, 같은 토큰은 처음 결과를 그대로 돌려준다
+      if (token.html) return token.html;
+      let note = token.name && notes.byName.get(token.name);
+      if (!note) {
+        const label = token.name || String(++notes.count);
+        note = { label, id: 'fn-' + label, html: this.parser.parseInline(token.tokens), refs: 0 };
+        notes.list.push(note);
+        if (token.name) notes.byName.set(token.name, note);
+      }
+      const refId = 'r' + note.id + (note.refs++ ? '-' + note.refs : '');
+      return (token.html = `<a class="wiki-fn" id="${esc(refId)}" data-scroll="${esc(note.id)}" role="button">[${esc(note.label)}]</a>`);
+    },
+  }],
+});
+
+// 원본 구조: 위쪽 회색 선 아래에 "[1] 내용" 한 줄씩. [1] 을 누르면 본문의 각주 위치로 돌아간다.
+function footnoteList() {
+  const box = document.createElement('div');
+  box.className = 'wiki-footnotes';
+  box.innerHTML = DOMPurify.sanitize(notes.list.map((n) =>
+    `<span class="wiki-fn-item"><a id="${esc(n.id)}" data-scroll="r${esc(n.id)}" role="button">[${esc(n.label)}]</a> ${n.html}</span>`).join(''));
+  return box;
+}
 
 export function renderMarkdown(md) {
+  notes = { count: 0, list: [], byName: new Map(), names: new Set() };
   const root = document.createElement('div');
   root.innerHTML = DOMPurify.sanitize(marked.parse(md || '', { gfm: true, breaks: true }));
+  const fnMarker = [...root.querySelectorAll('p')].find((p) => FOOTNOTE_MARKERS.includes(p.textContent.trim()));
+  if (fnMarker) notes.list.length ? fnMarker.replaceWith(footnoteList()) : fnMarker.remove();
 
   // 외부 링크는 새 탭으로
   root.querySelectorAll('a[href^="http"]').forEach((a) => {
@@ -21,6 +79,7 @@ export function renderMarkdown(md) {
   const headings = [...root.querySelectorAll('h1, h2, h3, h4, h5, h6')];
   if (!headings.length) {
     marker?.remove();
+    if (!fnMarker && notes.list.length) root.append(footnoteList());
     return root.innerHTML;
   }
 
@@ -39,6 +98,7 @@ export function renderMarkdown(md) {
     el.id = id;
     el.innerHTML = `<a class="wiki-heading-num" data-scroll="toc" role="button">${num}</a> <span>${h.innerHTML}</span>`;
     h.replaceWith(el);
+    h.querySelectorAll('.wiki-fn').forEach((a) => a.remove()); // 목차에는 [1] 을 빼고 넣는다
     return { depth, num, id, text: h.textContent };
   });
 
@@ -78,6 +138,8 @@ export function renderMarkdown(md) {
     }
     h.after(section);
   }
+  // 문서 끝 각주 목록은 마지막 문단에 섞여 접히지 않도록 문단 묶기가 끝난 뒤에 붙인다
+  if (!fnMarker && notes.list.length) root.append(footnoteList());
   return root.innerHTML;
 }
 

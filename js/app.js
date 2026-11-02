@@ -159,7 +159,12 @@ app.addEventListener('click', (e) => {
   const link = e.target.closest('[data-scroll]');
   if (!link) return;
   e.preventDefault();
-  const target = document.getElementById(link.dataset.scroll);
+  scrollToId(link.dataset.scroll);
+});
+
+function scrollToId(id) {
+  hideFootnote();
+  const target = document.getElementById(id);
   if (!target) return;
   // 접힌 문단 안으로 이동하면 펼친다
   for (let s = target.closest('.wiki-section-folded'); s; s = s.parentElement.closest('.wiki-section-folded')) {
@@ -167,6 +172,57 @@ app.addEventListener('click', (e) => {
     s.previousElementSibling?.classList.remove('wiki-heading-folded');
   }
   target.scrollIntoView({ block: 'start' });
+}
+
+// 각주 말풍선: 원본처럼 마우스를 올리면 각주 위 5px 에 내용을 띄운다 (터치는 누르면 각주 목록으로 이동만)
+const fnPop = document.createElement('div');
+fnPop.className = 'fn-popper';
+fnPop.hidden = true;
+document.body.append(fnPop);
+let fnTimer;
+
+function showFootnote(ref) {
+  const item = document.getElementById(ref.dataset.scroll)?.parentElement;
+  if (!item) return;
+  clearTimeout(fnTimer);
+  const copy = item.cloneNode(true);
+  copy.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+  fnPop.replaceChildren(...copy.childNodes);
+  fnPop.style.left = fnPop.style.top = '0';
+  fnPop.hidden = false;
+  const r = ref.getBoundingClientRect();
+  const { width, height } = fnPop.getBoundingClientRect();
+  const left = Math.max(8, Math.min(r.left + r.width / 2 - width / 2, document.documentElement.clientWidth - width - 8));
+  const above = r.top - height - 5 >= 0;
+  fnPop.classList.toggle('below', !above);
+  fnPop.style.left = left + scrollX + 'px';
+  fnPop.style.top = (above ? r.top - height - 5 : r.bottom + 5) + scrollY + 'px';
+  fnPop.style.setProperty('--arrow-x', r.left + r.width / 2 - left + 'px');
+}
+
+function hideFootnote() {
+  clearTimeout(fnTimer);
+  fnPop.hidden = true;
+}
+
+// 말풍선 안의 링크를 누를 수 있게 잠깐 기다렸다가 닫는다
+const hideFootnoteSoon = () => {
+  clearTimeout(fnTimer);
+  fnTimer = setTimeout(hideFootnote, 150);
+};
+
+app.addEventListener('pointerover', (e) => {
+  const ref = e.target.closest('.wiki-fn');
+  if (ref && e.pointerType === 'mouse') showFootnote(ref);
+});
+app.addEventListener('pointerout', (e) => {
+  if (e.target.closest('.wiki-fn')) hideFootnoteSoon();
+});
+fnPop.addEventListener('pointerenter', () => clearTimeout(fnTimer));
+fnPop.addEventListener('pointerleave', hideFootnoteSoon);
+fnPop.addEventListener('click', (e) => {
+  const link = e.target.closest('[data-scroll]');
+  if (link) scrollToId(link.dataset.scroll);
 });
 
 /* ---------------- 편집 ---------------- */
@@ -195,11 +251,12 @@ async function viewEdit(title) {
             <button type="button" data-wrap="\n## |\n" title="제목"><i class="fa-solid fa-heading"></i></button>
             <button type="button" data-wrap="[|](https://)" title="링크"><i class="fa-solid fa-link"></i></button>
             <button type="button" data-wrap="\n[목차]\n|" title="목차 위치"><i class="fa-solid fa-list-ol"></i></button>
+            <button type="button" data-wrap="[* |]" title="각주"><i class="fa-solid fa-asterisk"></i></button>
             <button type="button" id="img-btn" title="이미지 업로드"><i class="fa-solid fa-image"></i></button>
             <button type="button" id="infobox-btn" title="인물 정보 틀 넣기"><i class="fa-solid fa-id-card"></i></button>
             <input type="file" id="img-file" accept="image/png,image/jpeg,image/gif,image/webp" hidden />
           </div>
-          <textarea id="edit-text" spellcheck="false" placeholder="마크다운으로 작성하세요.&#10;# 제목, ## 소제목 을 쓰면 목차가 자동으로 만들어집니다.&#10;이미지는 위 버튼, 붙여넣기, 끌어다 놓기로 올릴 수 있습니다.">${esc(data?.content ?? '')}</textarea>
+          <textarea id="edit-text" spellcheck="false" placeholder="마크다운으로 작성하세요.&#10;# 제목, ## 소제목 을 쓰면 목차가 자동으로 만들어집니다.&#10;각주는 [* 내용] 으로 쓰고, 목록은 문서 끝(또는 [각주] 를 쓴 줄)에 나옵니다.&#10;이미지는 위 버튼, 붙여넣기, 끌어다 놓기로 올릴 수 있습니다.">${esc(data?.content ?? '')}</textarea>
         </div>
         <div class="edit-pane wiki-content" data-pane="preview" hidden></div>
         <div class="form-actions">
@@ -387,6 +444,6 @@ onAuthStateChanged(auth, (user) => {
   renderUserMenu();
   resolveAuthReady();
 });
-window.addEventListener('hashchange', () => { setUserMenu(false); route(); });
+window.addEventListener('hashchange', () => { setUserMenu(false); hideFootnote(); route(); });
 window.addEventListener('beforeunload', (e) => { if (editDirty) e.preventDefault(); });
 route();
