@@ -1,0 +1,10 @@
+{
+  "name": "wiki-sample",
+  "version": "1.0.0",
+  "private": true,
+  "description": "나무위키 스타일 위키 (Firebase Firestore + Supabase Storage)",
+  "scripts": {
+    "start": "npx --yes http-server@14.1.1 -c-1 -p 5500 .",
+    "deploy:rules": "npx --yes firebase-tools@13.29.1 deploy --only firestore:rules"
+  }
+}

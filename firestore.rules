@@ -1,0 +1,27 @@
+rules_version = '2';
+
+// 샘플위키 Firestore 보안 규칙
+//  - 문서 읽기: 누구나
+//  - 문서 작성/수정: 로그인한 사용자만, 정해진 필드만
+//  - 삭제: 금지
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /documents/{docId} {
+      allow read: if true;
+
+      allow create, update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['title', 'content', 'updatedAt', 'updatedBy'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.content is string
+        && request.resource.data.content.size() <= 500000
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedBy.uid == request.auth.uid
+        // 기존 문서의 제목은 바꿀 수 없음
+        && (resource == null || resource.data.title == request.resource.data.title);
+
+      allow delete: if false;
+    }
+  }
+}
